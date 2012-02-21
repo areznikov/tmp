@@ -7,6 +7,7 @@ ADMINS = (
     # ('Artur', 'qwartyr@gmail.com'),
 )
 
+VERSION="0.0a"
 MANAGERS = ADMINS
 
 DATABASES = {

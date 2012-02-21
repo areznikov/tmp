@@ -1,13 +1,12 @@
-
-
 from django.db import models
+from django.contrib.auth.models import User
 import datetime
 import logging
 
 
 #internal imports
 import server.logconfig
-logging.getLogger(name="amf_server")
+logger=logging.getLogger(name="amf_server")
 
 # Create your models here.
 
@@ -45,7 +44,7 @@ class GameStatus(models.Model):
             self.code=status_code
             self.changed=datetime.now()
         else:
-            logging.error("Wrong status received in GameStatus.change_status() wrong status_code: " + status_code)
+            logger.error("Wrong status received in GameStatus.change_status() wrong status_code: " + status_code)
 
 class Status( models.Model):
     """
@@ -75,7 +74,7 @@ class Status( models.Model):
             self.code=status_code
             self.changed=datetime.now()
         else:
-            logging.error("Wrong status received in Status.change_status() wrong status_code: " + status_code)
+            logger.error("Wrong status received in Status.change_status() wrong status_code: " + status_code)
 
 class Cult(models.Model):
     """
@@ -87,8 +86,10 @@ class Cult(models.Model):
 class Player(models.Model):
     """
     Player parameters
+    Build similar to django profile
     """
-    name = models.CharField(max_length=64) # player nickname
+    user = models.OneToOneField(User) # linked to django user profile
+    name = self.user.user_name # player nickname
     avatar = models.URLField() # url to the players avatar picture
     experience = models.IntegerField() # player experience
     coins_golden = models.IntegerField() # players golden coins
@@ -98,10 +99,30 @@ class Player(models.Model):
     games_lost = models.IntegerField() #numver of lost games
     games_draw = games_overall-games_lost-games_won # number of draw games
     status = models.ForeignKey(Status)
+    #player_deck is linked to it using ForeightKey
+    #games are linked to it using ForeightKey
+    #game_decksare linked to it using ForeightKey
 
 
+class PlayerInfo(models.Model):
+    """
+    Temporary class for sending user info to the client
+    """
+    name = models.CharField(max_length=64) # player nickname
+    avatar = models.URLField() # url to the players avatar picture
+    experience = models.IntegerField() # player experience
+    games_overall = models.IntegerField()# overall number of games
+    games_won = models.IntegerField()#number of win games
+    games_lost = models.IntegerField() #numver of lost games
+    games_draw = games_overall-games_lost-games_won # number of draw games
 
-
+    def __init__(self,Player):
+        self.name=Player.name
+        self.avatar=Player.avatar
+        self.experience=Player.experience
+        self.games_overall=Player.games_overall
+        self.games_won=Player.games_won
+        self.games_lost=Player.games_lost
 
 
 
@@ -159,6 +180,18 @@ class PlayerCard(models.Model):
     feature=card.feature
     feature_super=card.feature_super
 
+
+class Game(models.Model):
+    """
+    Current game
+    """
+    player_first = models.ForeignKey(Player) # first player in the game
+    player_second = models.ForeignKey(Player) # second player in the game
+    status = models.ForeignKey(GameStatus) # game status
+    player_first_approval=models.BooleanField() #approval of the first player
+    player_second_approval=models.BooleanField() # approval of the second player
+    log_game_status=models.TextField() # log of changes in game statuses
+    log_game_turns=models.TextField() # log of game turns
 
 
 
