@@ -20,4 +20,4 @@ services = {
     'user.logout': views.user_logout
 }
 
-echoGateway = DjangoGateway(services)
+AMFGateway = DjangoGateway(services)
