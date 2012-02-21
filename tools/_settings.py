@@ -9,7 +9,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-5.5s [%(name)s] %(message)s'
 )
 
-amf_server_url = 'http://127.0.0.1:8000/api/'
+AMF_SERVER_URL = 'http://127.0.0.1:8000/api/'
 
 
 

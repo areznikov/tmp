@@ -1,9 +1,10 @@
-from
-
 from pyamf.remoting.client import RemotingService
 
+#local includes
+import _settings as settings
 
-gw = RemotingService(url, logger=logging)
-service = gw.getService('myservice')
+gw = RemotingService(settings.AMF_SERVER_URL,settings.logger)
+service = gw.getService('server')
 
 print service.echo('Hello World!')
+print service.version()

@@ -89,7 +89,7 @@ class Player(models.Model):
     Build similar to django profile
     """
     user = models.OneToOneField(User) # linked to django user profile
-    name = self.user.user_name # player nickname
+    #name = user.username # player nickname
     avatar = models.URLField() # url to the players avatar picture
     experience = models.IntegerField() # player experience
     coins_golden = models.IntegerField() # players golden coins
@@ -97,11 +97,14 @@ class Player(models.Model):
     games_overall = models.IntegerField()# overall number of games
     games_won = models.IntegerField()#number of win games
     games_lost = models.IntegerField() #numver of lost games
-    games_draw = games_overall-games_lost-games_won # number of draw games
     status = models.ForeignKey(Status)
     #player_deck is linked to it using ForeightKey
     #games are linked to it using ForeightKey
     #game_decksare linked to it using ForeightKey
+
+    def _calc_draws(self):
+        return self.games_overall-self.games_won-self.games_lost
+    games_draw = property(_calc_draws)
 
 
 class PlayerInfo(models.Model):
@@ -114,16 +117,18 @@ class PlayerInfo(models.Model):
     games_overall = models.IntegerField()# overall number of games
     games_won = models.IntegerField()#number of win games
     games_lost = models.IntegerField() #numver of lost games
-    games_draw = games_overall-games_lost-games_won # number of draw games
 
     def __init__(self,Player):
-        self.name=Player.name
+        self.name=Player.user.username
         self.avatar=Player.avatar
         self.experience=Player.experience
         self.games_overall=Player.games_overall
         self.games_won=Player.games_won
         self.games_lost=Player.games_lost
 
+    def _calc_draws(self):
+         return self.games_overall-self.games_won-self.games_lost
+    games_draw = property(_calc_draws)
 
 
 class Card(models.Model):
@@ -135,8 +140,8 @@ class Card(models.Model):
     desc = models.TextField() # description of the card
     cost_in_gold = models.IntegerField() # cost in golden coins
     cost_in_silver = models.IntegerField() # cost in silver coins.  Value -1 means that it can be bought for gold.
-    generation = models.SmallIntegerField # generation of the card
-    hitpoints_base= models.SmallIntegerField #  basic hitpoints of the card
+    generation = models.SmallIntegerField() # generation of the card
+    hitpoints_base= models.SmallIntegerField() #  basic hitpoints of the card
     damage_base = models.SmallIntegerField() # basic damage caused by the card
     feature = models.TextField() # description of the card's feature
     hitpoints_increase = models.SmallIntegerField() # increase of card's hitpoints per level
@@ -157,7 +162,9 @@ class PlayerDeck():
     Player's deck, i.e set of the Player's cards.
     It is empty class just to connect player and his/her set of cards
     """
-    player = models.ForeignKey(Player) #linked to player
+    name = models.CharField(max_length=64)# name of the deck
+    player = models.ForeignKey(Player)#linked to player
+
 
 
 class PlayerCard(models.Model):
@@ -165,28 +172,52 @@ class PlayerCard(models.Model):
      Player's card. Is a successor from one of the Basic cards, but adding some experience and level factors
     """
     card = models.ForeignKey(Card) # ancestor card for player's one READ-ONLY
-    deck = models.ForeignKey(PlayerDeck) # linked to player's deck
+    #deck = models.ForeignKey(PlayerDeck) # linked to player's deck
     experience = models.SmallIntegerField() # player's card experience
     level = models.SmallIntegerField() # player's card level
-    hitpoints = int(card.hitpoints_base+card.hitpoints_increase*level) # current card hitpoints
-    damage = int(card.damage_base+card.damage_increase*level)# current cart damage
-    #stumbs
-    name=card.name
-    desc=card.desc
-    avatar=card.avatar
-    cost_in_gold=card.cost_in_gold
-    cost_in_silver=card.cost_in_silver
-    generation=card.generation
-    feature=card.feature
-    feature_super=card.feature_super
 
+    #stumbs
+
+
+    def _get_name(self):
+        return self.card.name
+    def _get_desc(self):
+        return self.card.desc
+    def _get_avatar(self):
+        return self.card.avatar
+    def _get_cost_in_gold(self):
+        return self.card.cost_in_gold
+    def _get_cost_in_silver(self):
+        return self.card.cost_in_silver
+    def _get_generation(self):
+        return self.card.generation
+    def _get_feature(self):
+        return self.card.feature
+    def _get_feature_super(self):
+        return self.card.feature_super
+
+    def _calc_hitpoints(self):
+        return self.card.hitpoints_base+self.card.hitpoints_increase*self.level
+    def _calc_damage(self):
+        return self.card.damage_base+self.card.damage_increase*self.level
+
+    name=property(_get_name)
+    desc=property(_get_desc)
+    avatar=property(_get_avatar)
+    cost_in_gold=property(_get_cost_in_gold)
+    cost_in_silver=property(_get_cost_in_silver)
+    generation=property(_get_generation)
+    feature=property(_get_feature)
+    feature_super=property(_get_feature_super)
+    hitpoints = property(_calc_hitpoints) # current card hitpoints
+    damage = property(_calc_damage)# current cart damage
 
 class Game(models.Model):
     """
     Current game
     """
-    player_first = models.ForeignKey(Player) # first player in the game
-    player_second = models.ForeignKey(Player) # second player in the game
+    player_first = models.ForeignKey(Player,related_name='player_first') # first player in the game
+    player_second = models.ForeignKey(Player,related_name='player_second') # second player in the game
     status = models.ForeignKey(GameStatus) # game status
     player_first_approval=models.BooleanField() #approval of the first player
     player_second_approval=models.BooleanField() # approval of the second player
