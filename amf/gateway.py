@@ -7,7 +7,7 @@ import settings
 def echo(request, data):
     return data
 
-def version():
+def version(request):
     return settings.VERSION
     
 
@@ -15,7 +15,7 @@ def version():
 
 services = {
     'server.echo': echo,
-    'server.get_version' : version,
+    'server.version' : version,
     'user.login': views.user_login,
     'user.logout': views.user_logout
 }
