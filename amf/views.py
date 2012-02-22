@@ -27,7 +27,7 @@ def user_login(http_request,username,password):
     user=authenticate(username=username,password=password)
     if user is not None:
         login(http_request,user)
-        logger.info("user:"+username+" login from ip:"+http_request.META['HTTP_X_FORWARDED_FOR'])
+        #logger.info("user:"+username+" login from ip:"+http_request.META['HTTP_X_FORWARDED_FOR'])
         return user
     else:
         return None

@@ -11,12 +11,3 @@ service = gw.getService('server')
 print service.echo('Hello World!')
 print service.version()
 
-player = gw.getService('user')
-
-
-player.prove_access("I have access to it")
-
-
-
-gw.setCredentials("","")
-player.prove_access("I have access to it")

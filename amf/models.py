@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 import datetime
 import logging
 
@@ -106,8 +107,14 @@ class Player(models.Model):
         return self.games_overall-self.games_won-self.games_lost
     games_draw = property(_calc_draws)
 
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            UserProfile.objects.create(user=instance)
+    post_save.connect(create_user_profile, sender=User)
+
 #created to be able to access Player directly from django user
 User.profile = property(lambda u: Player.objects.get_or_create(user=u)[0])
+
 
 
 class PlayerInfo(models.Model):
