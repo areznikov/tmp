@@ -1,6 +1,6 @@
 from pyamf.remoting.gateway.django import DjangoGateway
 from server.amf import views as views
-import settings 
+import server.settings as settings
 
 
 
