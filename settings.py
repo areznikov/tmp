@@ -10,6 +10,8 @@ ADMINS = (
 VERSION="0.0a"
 MANAGERS = ADMINS
 
+AUTH_PROFILE_MODULE="amf.Player"
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
