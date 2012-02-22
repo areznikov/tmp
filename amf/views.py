@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import  login_required
 import logging
 
-
 #internal imports
 import server.logconfig
 
@@ -35,6 +34,6 @@ def user_login(http_request,username,password):
 
 
 @login_required
-def registered_user_protected_function(http_request):
-    return "You are a registered user."
+def prove_access(http_request,data):
+    return data
 

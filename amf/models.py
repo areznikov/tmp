@@ -97,7 +97,7 @@ class Player(models.Model):
     games_overall = models.IntegerField()# overall number of games
     games_won = models.IntegerField()#number of win games
     games_lost = models.IntegerField() #numver of lost games
-    status = models.ForeignKey(Status)
+    status = models.OneToOneField(Status)
     #player_deck is linked to it using ForeightKey
     #games are linked to it using ForeightKey
     #game_decksare linked to it using ForeightKey
@@ -105,6 +105,9 @@ class Player(models.Model):
     def _calc_draws(self):
         return self.games_overall-self.games_won-self.games_lost
     games_draw = property(_calc_draws)
+
+#created to be able to access Player directly from django user
+User.profile = property(lambda u: Player.objects.get_or_create(user=u)[0])
 
 
 class PlayerInfo(models.Model):
