@@ -16,5 +16,6 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     #Binding for AMF Gateway
-    url(r'^api/','server.amf.gateway.AMFGateway')
+    url(r'^api/','server.amf.gateway.AMFGateway'),
+    url(r'^pub/','server.amf.gateway.Pub_AMFGateway')
 )

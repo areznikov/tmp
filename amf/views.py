@@ -7,11 +7,9 @@ from django.contrib.auth.decorators import  login_required
 import logging
 
 #internal imports
-import server.logconfig
+import server.settings_server
 
 logger=logging.getLogger(name="amf_server")
-
-
 
 try:
     pyamf.register_class(User,'django.contrib.auth.models.User')
@@ -36,4 +34,5 @@ def user_login(http_request,username,password):
 @login_required
 def prove_access(http_request,data):
     return data
+
 

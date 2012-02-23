@@ -6,7 +6,7 @@ import logging
 
 
 #internal imports
-import server.logconfig
+import server.settings_server as settings_server
 logger=logging.getLogger(name="amf_server")
 
 # Create your models here.
@@ -35,6 +35,9 @@ class GameStatus(models.Model):
     code = models.SmallIntegerField(choices=AVALIABLE_GAME_STATUSES) # status code
     changed = models.TimeField("time changed") # when status was changed last time
 
+    def __unicode__(self):
+        return self.code
+
     def change_status(self,status_code):
         """
         Change status of the Game
@@ -61,9 +64,15 @@ class Status( models.Model):
         (0,"In menu"),
         (1,"Wait for rival"),
         (2,"In game")
-    )
-    code = models.SmallIntegerField(choices=AVALIABLE_STATUSES) # status code
-    changed = models.TimeField("time changed") # when status was changed last time
+        )
+    code = models.SmallIntegerField(choices=AVALIABLE_STATUSES,default=AVALIABLE_STATUSES[0][0]) # status code
+    changed = models.TimeField("time changed",default=0) # when status was changed last time
+    #Player is linked via Foreign  key
+    def __unicode__(self):
+        return self.code
+
+    def __init__(self):
+        self.changed=datetime.now()
 
     def change_status(self,status_code):
         """
@@ -77,12 +86,21 @@ class Status( models.Model):
         else:
             logger.error("Wrong status received in Status.change_status() wrong status_code: " + status_code)
 
+    #def create_user_status(sender, instance, created, **kwargs):
+    #    if created:
+    #        Status.objects.create(user=instance)
+    #post_save.connect(create_user_status, sender=Player)
+
+
 class Cult(models.Model):
     """
      Cult information. Every player, except paid ones, has a cult to worship to  Yes, just name and description.
     """
     name = models.CharField(max_length=16) # name of the Cult
     desc = models.TextField() #description of the Cult
+
+    def __unicode__(self):
+        return self.name
 
 class Player(models.Model):
     """
@@ -91,25 +109,43 @@ class Player(models.Model):
     """
     user = models.OneToOneField(User) # linked to django user profile
     #name = user.username # player nickname
-    avatar = models.URLField() # url to the players avatar picture
-    experience = models.IntegerField() # player experience
-    coins_golden = models.IntegerField() # players golden coins
-    coins_silver = models.IntegerField() # players silver coins
-    games_overall = models.IntegerField()# overall number of games
-    games_won = models.IntegerField()#number of win games
-    games_lost = models.IntegerField() #numver of lost games
-    status = models.OneToOneField(Status)
+    avatar = models.URLField(default=settings_server.Player_avatar_default) # url to the players avatar picture
+    experience = models.IntegerField(default=settings_server.Player_experience_start) # player experience
+    coins_golden = models.IntegerField(default=settings_server.Player_coins_golden_start) # players golden coins
+    coins_silver = models.IntegerField(default=settings_server.Player_coins_silver_start) # players silver coins
+    games_overall = models.IntegerField(default=0)# overall number of games
+    games_won = models.IntegerField(default=0)#number of win games
+    games_lost = models.IntegerField(default=0) #numver of lost games
+    status = models.SmallIntegerField(choices=settings_server.Player_Statuses,default=settings_server.Player_Statuses[0][0])
+    status_changed = models.DateTimeField(auto_now=True)
+    #status = models.OneToOneField(Status,default=Status.AVALIABLE_STATUSES[0][0])
     #player_deck is linked to it using ForeightKey
     #games are linked to it using ForeightKey
     #game_decksare linked to it using ForeightKey
+
+
+    def __unicode__(self):
+        return self.user.username
 
     def _calc_draws(self):
         return self.games_overall-self.games_won-self.games_lost
     games_draw = property(_calc_draws)
 
+    def change_status(self,status_code):
+        """
+        Change status of the User
+        @type status_code: number
+        @param status_code: status_code from Available statuses
+        """
+        if (status_code in self.AVALIABLE_STATUSES):
+            self.code=status_code
+            self.changed=datetime.now()
+        else:
+            logger.error("Wrong status received in Status.change_status() wrong status_code: " + status_code)
+
     def create_user_profile(sender, instance, created, **kwargs):
         if created:
-            UserProfile.objects.create(user=instance)
+            Player.objects.create(user=instance)
     post_save.connect(create_user_profile, sender=User)
 
 #created to be able to access Player directly from django user
@@ -117,16 +153,16 @@ User.profile = property(lambda u: Player.objects.get_or_create(user=u)[0])
 
 
 
-class PlayerInfo(models.Model):
+class PlayerInfo():
     """
     Temporary class for sending user info to the client
     """
-    name = models.CharField(max_length=64) # player nickname
-    avatar = models.URLField() # url to the players avatar picture
-    experience = models.IntegerField() # player experience
-    games_overall = models.IntegerField()# overall number of games
-    games_won = models.IntegerField()#number of win games
-    games_lost = models.IntegerField() #numver of lost games
+    name = "" # player nickname
+    avatar = "" # url to the players avatar picture
+    experience = 0 # player experience
+    games_overall = 0 # overall number of games
+    games_won = 0 #number of win games
+    games_lost = 0 #numver of lost games
 
     def __init__(self,Player):
         self.name=Player.user.username
@@ -135,6 +171,9 @@ class PlayerInfo(models.Model):
         self.games_overall=Player.games_overall
         self.games_won=Player.games_won
         self.games_lost=Player.games_lost
+
+    def __unicode__(self):
+        return self.name
 
     def _calc_draws(self):
          return self.games_overall-self.games_won-self.games_lost
@@ -157,7 +196,10 @@ class Card(models.Model):
     hitpoints_increase = models.SmallIntegerField() # increase of card's hitpoints per level
     damage_increase = models.SmallIntegerField() # increase of card's damage per level
     feature_super = models.TextField() # decription of the card's feature at the highest level
-    
+
+    def __unicode__(self):
+        return self.name
+
     def paid_players_only(self):
         """
         Returns Boolean: True if card can be bought only for gold
@@ -175,6 +217,9 @@ class PlayerDeck():
     name = models.CharField(max_length=64)# name of the deck
     player = models.ForeignKey(Player)#linked to player
 
+    def __unicode__(self):
+        return self.name
+
 
 
 class PlayerCard(models.Model):
@@ -186,6 +231,8 @@ class PlayerCard(models.Model):
     experience = models.SmallIntegerField() # player's card experience
     level = models.SmallIntegerField() # player's card level
 
+    def __unicode__(self):
+        return self.name+"_"+self.generation
     #stumbs
 
 
@@ -233,6 +280,9 @@ class Game(models.Model):
     player_second_approval=models.BooleanField() # approval of the second player
     log_game_status=models.TextField() # log of changes in game statuses
     log_game_turns=models.TextField() # log of game turns
+
+    def __unicode__(self):
+        return self.status.code+"_"+self.player_first+" "+self.player_second
 
 
 

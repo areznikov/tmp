@@ -7,10 +7,11 @@ ADMINS = (
     # ('Artur', 'qwartyr@gmail.com'),
 )
 
-VERSION="0.0a"
+
 MANAGERS = ADMINS
 
 AUTH_PROFILE_MODULE="amf.Player"
+
 
 DATABASES = {
     'default': {
@@ -118,7 +119,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'south',
+    #'south',
     'server.amf',
 )
 

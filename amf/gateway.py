@@ -1,8 +1,10 @@
 from pyamf.remoting.gateway.django import DjangoGateway
 from django.contrib.auth import authenticate as django_authenticate
+
+#local including
 from server.amf import views as views
 import server.settings as settings
-
+import server.settings_server as settings_server
 
 
 def echo(request, data):
@@ -10,7 +12,7 @@ def echo(request, data):
 
 
 def version(request):
-    return settings.VERSION
+    return settings_server.VERSION
     
 def auth(username,password):
     user= django_authenticate(username=username,password=password)
@@ -24,9 +26,16 @@ def auth(username,password):
 services = {
     'server.echo': echo,
     'server.version' : version,
-    #'user.login': views.user_login,
-    #'user.logout': views.user_logout,
-    #'user.prove_access':views.prove_access
 }
 
-AMFGateway = DjangoGateway(services, authenticator=auth)
+pub_services = {
+    'server.echo': echo,
+    'server.version' : version,
+    'user.login': views.login,
+    'user.logout': views.logout
+}
+
+
+#AMFGateway = DjangoGateway(services, authenticator=auth)
+AMFGateway = DjangoGateway(services)
+Pub_AMFGateway = DjangoGateway(pub_services)
